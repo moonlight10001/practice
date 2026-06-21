@@ -367,7 +367,7 @@ namespace Router
                 Console.WriteLine($"Two params: b={b}, a={a}");
             });
 
-            Console.WriteLine("Зарегистрированные маршруты:");
+            Console.WriteLine("Registered routes:");
             Console.WriteLine("  /foo/bar/");
             Console.WriteLine("  /foo/bar/{p:int}/");
             Console.WriteLine("  /foo/{name:string}/");
