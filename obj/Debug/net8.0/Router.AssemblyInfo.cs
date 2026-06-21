@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Router")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a9a18fa387e912aed86fe6fe790d8135756eaee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1737ac744b361b8e149fa06ab66f85444e9a07df")]
 [assembly: System.Reflection.AssemblyProductAttribute("Router")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Router")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

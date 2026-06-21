@@ -373,7 +373,7 @@ namespace Router
             Console.WriteLine("  /foo/{name:string}/");
             Console.WriteLine("  /foo/bar/{a:int}/{b:int}/");
             Console.WriteLine();
-            Console.WriteLine("Введите маршрут для обработки (или 'exit' для выхода):");
+            Console.WriteLine("Enter the route to process (or 'exit' to exit):");
 
             while (true)
             {
@@ -383,7 +383,7 @@ namespace Router
 
                 if (input == null || input.Trim().Equals("exit", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine("Завершение работы.");
+                    Console.WriteLine("Completion of work.");
                     break;
                 }
 
@@ -391,7 +391,7 @@ namespace Router
 
                 if (trimmed.Length == 0)
                 {
-                    Console.WriteLine("Ошибка: пустой ввод. Попробуйте ещё раз.");
+                    Console.WriteLine("Error: Empty input. Please try again.");
                     Console.WriteLine();
                     continue;
                 }
@@ -402,15 +402,15 @@ namespace Router
                 }
                 catch (KeyNotFoundException ex)
                 {
-                    Console.WriteLine($"Ошибка: маршрут не найден. {ex.Message}");
+                    Console.WriteLine($"Error: Route not found. {ex.Message}");
                 }
                 catch (ArgumentException ex)
                 {
-                    Console.WriteLine($"Ошибка: некорректный маршрут. {ex.Message}");
+                    Console.WriteLine($"Error: Invalid route. {ex.Message}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Ошибка: {ex.GetType().Name}: {ex.Message}");
+                    Console.WriteLine($"Error: {ex.GetType().Name}: {ex.Message}");
                 }
 
                 Console.WriteLine();
