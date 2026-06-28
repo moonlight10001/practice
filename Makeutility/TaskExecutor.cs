@@ -1,91 +1,65 @@
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace MakeUtility
 {
     class TaskExecutor
     {
         private readonly Dictionary<string, Task> _tasks;
+        private readonly ILogger _logger;
+        private readonly ITaskRunner _runner;
 
-        public TaskExecutor(Dictionary<string, Task> tasks)
+        public TaskExecutor(Dictionary<string, Task> tasks, ILogger logger, ITaskRunner runner)
         {
             _tasks = tasks;
+            _logger = logger;
+            _runner = runner;
         }
 
-        public bool Execute(string targetName)
+        public bool TryExecute(string targetName)
         {
-            var ordered = new List<Task>();
             var visited = new HashSet<string>();
             var inProgress = new HashSet<string>();
 
-            bool ok = TopoSort(targetName, visited, inProgress, ordered);
-            if (!ok) return false;
+            return Visit(targetName, visited, inProgress);
+        }
 
-            foreach (var task in ordered)
+        private bool Visit(string name, HashSet<string> visited, HashSet<string> inProgress)
+        {
+            var stack = new Stack<(string name, bool expanding)>();
+            stack.Push((name, false));
+
+            while (stack.Count > 0)
             {
-                Console.WriteLine(task.Name);
-                foreach (var action in task.Actions)
+                var (current, expanding) = stack.Pop();
+
+                if (expanding)
                 {
-                    Console.WriteLine($" {action}");
-                    RunAction(action);
+                    inProgress.Remove(current);
+                    visited.Add(current);
+
+                    var task = _tasks[current];
+                    _runner.RunTask(task);
+                    continue;
                 }
-            }
 
-            return true;
-        }
+                if (visited.Contains(current))
+                    continue;
 
-        private bool TopoSort(string name, HashSet<string> visited, HashSet<string> inProgress, List<Task> ordered)
-        {
-            if (visited.Contains(name))
-                return true;
-
-            if (inProgress.Contains(name))
-                return false;
-
-            inProgress.Add(name);
-
-            var task = _tasks[name];
-            foreach (var dep in task.Dependencies)
-            {
-                bool ok = TopoSort(dep, visited, inProgress, ordered);
-                if (!ok) return false;
-            }
-
-            inProgress.Remove(name);
-            visited.Add(name);
-            ordered.Add(task);
-
-            return true;
-        }
-
-        private void RunAction(string action)
-        {
-            try
-            {
-                var psi = new ProcessStartInfo
+                if (inProgress.Contains(current))
                 {
-                    FileName = "cmd.exe",
-                    Arguments = $"/c {action}",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false
-                };
+                    _logger.Log($"Error: circular dependency detected at target '{current}'");
+                    return false;
+                }
 
-                using var process = Process.Start(psi);
-                string output = process.StandardOutput.ReadToEnd();
-                string error = process.StandardError.ReadToEnd();
-                process.WaitForExit();
+                inProgress.Add(current);
+                stack.Push((current, true));
 
-                if (!string.IsNullOrEmpty(output))
-                    Console.Write(output);
-                if (!string.IsNullOrEmpty(error))
-                    Console.Error.Write(error);
+                var deps = _tasks[current].Dependencies;
+                for (int i = deps.Count - 1; i >= 0; i--)
+                    stack.Push((deps[i], false));
             }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error running action '{action}': {ex.Message}");
-            }
+
+            return true;
         }
     }
 }

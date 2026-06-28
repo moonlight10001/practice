@@ -5,9 +5,16 @@ namespace MakeUtility
 {
     class MakefileParser
     {
-        public Dictionary<string, Task> Parse(string[] lines)
+        private readonly ILogger _logger;
+
+        public MakefileParser(ILogger logger)
         {
-            var tasks = new Dictionary<string, Task>(StringComparer.Ordinal);
+            _logger = logger;
+        }
+
+        public bool TryParse(string[] lines, out Dictionary<string, Task> tasks)
+        {
+            tasks = new Dictionary<string, Task>(StringComparer.Ordinal);
             Task currentTask = null;
 
             for (int i = 0; i < lines.Length; i++)
@@ -17,14 +24,14 @@ namespace MakeUtility
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
-                bool isAction = line.Length > 0 && (line[0] == ' ' || line[0] == '\t');
+                bool isAction = line[0] == ' ' || line[0] == '\t';
 
                 if (isAction)
                 {
                     if (currentTask == null)
                     {
-                        Console.Error.WriteLine($"Error: action without target at line {i + 1}");
-                        Environment.Exit(1);
+                        _logger.Log($"Error: action without target at line {i + 1}");
+                        return false;
                     }
                     currentTask.Actions.Add(line.Trim());
                 }
@@ -33,8 +40,8 @@ namespace MakeUtility
                     int colonIndex = line.IndexOf(':');
                     if (colonIndex < 0)
                     {
-                        Console.Error.WriteLine($"Error: invalid line format at line {i + 1}: '{line}'");
-                        Environment.Exit(1);
+                        _logger.Log($"Error: invalid line format at line {i + 1}: '{line}'");
+                        return false;
                     }
 
                     string taskName = line.Substring(0, colonIndex).Trim();
@@ -42,14 +49,14 @@ namespace MakeUtility
 
                     if (string.IsNullOrEmpty(taskName))
                     {
-                        Console.Error.WriteLine($"Error: empty target name at line {i + 1}");
-                        Environment.Exit(1);
+                        _logger.Log($"Error: empty target name at line {i + 1}");
+                        return false;
                     }
 
                     if (tasks.ContainsKey(taskName))
                     {
-                        Console.Error.WriteLine($"Error: duplicate target '{taskName}' at line {i + 1}");
-                        Environment.Exit(1);
+                        _logger.Log($"Error: duplicate target '{taskName}' at line {i + 1}");
+                        return false;
                     }
 
                     currentTask = new Task { Name = taskName };
@@ -62,6 +69,7 @@ namespace MakeUtility
                     }
 
                     tasks[taskName] = currentTask;
+                    _logger.Log($"Parsed target: {taskName}");
                 }
             }
 
@@ -71,13 +79,13 @@ namespace MakeUtility
                 {
                     if (!tasks.ContainsKey(dep))
                     {
-                        Console.Error.WriteLine($"Error: unknown dependency '{dep}' in target '{task.Name}'");
-                        Environment.Exit(1);
+                        _logger.Log($"Error: unknown dependency '{dep}' in target '{task.Name}'");
+                        return false;
                     }
                 }
             }
 
-            return tasks;
+            return true;
         }
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 
 namespace MakeUtility
@@ -7,39 +6,38 @@ namespace MakeUtility
     {
         static void Main(string[] args)
         {
+            var logger = new ConsoleLogger();
+
             if (args.Length != 1)
             {
-                Console.Error.WriteLine("Usage: make.exe <target>");
-                Environment.Exit(1);
+                logger.Log("Usage: make.exe <target>");
+                return;
             }
 
             string targetName = args[0];
 
             if (!File.Exists("makefile"))
             {
-                Console.Error.WriteLine("Error: makefile not found");
-                Environment.Exit(1);
+                logger.Log("Error: makefile not found");
+                return;
             }
 
             string[] lines = File.ReadAllLines("makefile");
 
-            var parser = new MakefileParser();
-            var tasks = parser.Parse(lines);
+            var parser = new MakefileParser(logger);
+            if (!parser.TryParse(lines, out var tasks))
+                return;
 
             if (!tasks.ContainsKey(targetName))
             {
-                Console.Error.WriteLine($"Error: target '{targetName}' not found");
-                Environment.Exit(1);
+                logger.Log($"Error: target '{targetName}' not found");
+                return;
             }
 
-            var executor = new TaskExecutor(tasks);
-            bool success = executor.Execute(targetName);
+            var runner = new LoggingTaskRunner(logger);
+            var executor = new TaskExecutor(tasks, logger, runner);
 
-            if (!success)
-            {
-                Console.Error.WriteLine("Error: circular dependency detected");
-                Environment.Exit(1);
-            }
+            executor.TryExecute(targetName);
         }
     }
 }

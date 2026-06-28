@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace MakeUtility
 {
-    class Task
+    public class Task
     {
         public string Name { get; set; }
         public List<string> Dependencies { get; set; } = new List<string>();
